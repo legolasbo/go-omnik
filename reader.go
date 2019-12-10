@@ -8,10 +8,14 @@ import (
 )
 
 // Read reads a sample from the inverter.
-func Read(ip string, serial int) Sample {
+func Read(ip string, serial int) (Sample, error) {
 	command := GetAuthString(serial)
 
-	conn, _ := net.Dial("tcp", ip+":8899")
+	conn, err := net.Dial("tcp", ip+":8899")
+	if err != nil {
+		fmt.Println("Couldn't connect to inverter:", err)
+		return Sample{}, err
+	}
 	defer conn.Close()
 
 	// send to socket
@@ -23,5 +27,5 @@ func Read(ip string, serial int) Sample {
 		Data: []byte(message),
 	}
 
-	return msg.GetSample(time.Now())
+	return msg.GetSample(time.Now()), nil
 }

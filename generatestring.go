@@ -5,8 +5,37 @@ import (
 	"fmt"
 )
 
-// GenerateString generates an authentication string for the socket.
-func GenerateString(serial int) string {
+var (
+	authStrings map[int]string
+)
+
+// GetAuthString retrieves an authentication string for the socket.
+func GetAuthString(serial int) string {
+	s := getCachedAuthString(serial)
+
+	if s != "" {
+		return s
+	}
+
+	s = generateString(serial)
+	cacheAuthString(serial, s)
+	return s
+}
+
+func getCachedAuthString(serial int) string {
+	if authStrings == nil {
+		authStrings = make(map[int]string)
+		return ""
+	}
+
+	if s, ok := authStrings[serial]; ok {
+		return s
+	}
+	
+	return ""
+}
+
+func generateString(serial int) string {
 	doubleHex := fmt.Sprintf("%x%x", serial, serial)
 
 	var stringList []byte
@@ -31,4 +60,12 @@ func GenerateString(serial int) string {
 
 	retVal := start + hex + separator + string(checksum) + end
 	return retVal
+}
+
+func cacheAuthString(s int, a string) {
+	if authStrings == nil {
+		authStrings = make(map[int]string)
+	}
+
+	authStrings[s] = a
 }

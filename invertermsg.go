@@ -126,9 +126,9 @@ func (msg *InverterMsg) HoursGenerated() int {
 	return int(msg.getLong(75, 1))
 }
 
-// PowerOutput retrieves the current power output in amps.
+// PowerOutput retrieves the current power output in Watts.
 func (msg *InverterMsg) PowerOutput() float32 {
-	return msg.getShort(59, 10)
+	return msg.getShort(59, 1)
 }
 
 // PvVoltage retrieves the voltage a given PC channel is currently generating.

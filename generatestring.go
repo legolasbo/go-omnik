@@ -1,4 +1,4 @@
-package omnikreader
+package omnik
 
 import (
 	"encoding/hex"

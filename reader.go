@@ -7,13 +7,23 @@ import (
 	"time"
 )
 
-// Read reads a sample from the inverter.
-func Read(ip string, serial int) (Sample, error) {
-	command := GetAuthString(serial)
+// InverterInfo holds the connection information for a given inverter.
+type InverterInfo struct {
+	IP string
+	Serial int
+}
 
-	conn, err := net.Dial("tcp", ip+":8899")
+// Reader is capable of connecting to an Omnik converter and reading it's status.
+type Reader struct {
+	Inverter InverterInfo
+}
+
+// Read reads a sample from the inverter.
+func (r *Reader) Read() (Sample, error) {
+	command := GetAuthString(r.Inverter.Serial)
+
+	conn, err := net.Dial("tcp", r.Inverter.IP+":8899")
 	if err != nil {
-		fmt.Println("Couldn't connect to inverter:", err)
 		return Sample{}, err
 	}
 	defer conn.Close()

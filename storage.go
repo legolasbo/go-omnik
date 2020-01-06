@@ -74,13 +74,16 @@ func (s *SQL) initializeInsertStatement() {
 	s.insertStatement = stmt
 }
 
-// Insert inserts a sample into the SQL database.
-func (s *SQL) Insert(sample Sample) {
+func (s *SQL) ensureInitialized() {
 	if !s.initialized {
 		s.initialize()
 	}
-
 	s.db.Ping()
+}
+
+// Insert inserts a sample into the SQL database.
+func (s *SQL) Insert(sample Sample) {
+	s.ensureInitialized()
 	s.insertStatement.Exec(sample.Timestamp, sample.Date, sample.Time, sample.Temperature, sample.EnergyTotal, sample.EnergyToday, sample.EnergyHours, sample.Power, sample.PvVoltage1, sample.PvVoltage2, sample.PvVoltage3, sample.PvCurrent1, sample.PvCurrent2, sample.PvCurrent3, sample.ACVoltage1, sample.ACVoltage2, sample.ACVoltage3, sample.ACCurrent1, sample.ACCurrent2, sample.ACCurrent3, sample.ACFrequency1, sample.ACFrequency2, sample.ACFrequency3, sample.ACPower1, sample.ACPower2, sample.ACPower3)
 }
 
@@ -152,6 +155,7 @@ func (s *SQL) createTable(tableName string) {
 
 // HasMonth determines if data exists in the database for a given month.
 func (s *SQL) HasMonth(m time.Time) bool {
+	s.ensureInitialized()
 	r, err := s.db.Query("SELECT * FROM samples WHERE date LIKE ? LIMIT 1", m.Format("2006-01%"))
 
 	if err != nil {
@@ -169,6 +173,7 @@ type TimeKWH struct {
 
 // GetDailyKWHInRange retrieves the daily KWH values in the specified range.
 func (s *SQL) GetDailyKWHInRange(start time.Time, end time.Time) ([]TimeKWH, error) {
+	s.ensureInitialized()
 	var data []TimeKWH
 	q := "SELECT date, max(today_kwh) FROM samples WHERE date >= ? AND date <= ? GROUP BY date;"
 	r, err := s.db.Query(q, start.Format("2006-01-02"), end.Format("2006-01-02"))
@@ -195,10 +200,11 @@ func (s *SQL) GetDailyKWHInRange(start time.Time, end time.Time) ([]TimeKWH, err
 
 // GetLatestSample retrieves the last sample stored.
 func (s *SQL) GetLatestSample() (Sample, error) {
+	s.ensureInitialized()
 	sample := Sample{}
 	query := `SELECT * FROM samples
-	ORDER BY time_of_measurement DESC
-	LIMIT 1`
+		ORDER BY time_of_measurement DESC
+		LIMIT 1`
 	result, err := s.db.Query(query)
 	if err != nil {
 		return sample, err
@@ -216,6 +222,7 @@ func (s *SQL) GetLatestSample() (Sample, error) {
 
 // GetSamplesForDate retrieves all samples on a given date.
 func (s *SQL) GetSamplesForDate(d time.Time) ([]Sample, error) {
+	s.ensureInitialized()
 	var data []Sample
 	r, err := s.db.Query("SELECT * FROM samples WHERE date =? ORDER BY time_of_measurement ASC", d.Format("2006-01-02"))
 	if err != nil {
@@ -260,6 +267,7 @@ func trimSamples(data []Sample) []Sample {
 
 // GetAdjecentDate retrieves the date adjecent to the given time.
 func (s *SQL) GetAdjecentDate(t time.Time, a Adjecency) (time.Time, error) {
+	s.ensureInitialized()
 	var op, sort string
 	switch a.(type) {
 	case Before:

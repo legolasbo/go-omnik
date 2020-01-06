@@ -9,13 +9,13 @@ import (
 
 // InverterInfo holds the connection information for a given inverter.
 type InverterInfo struct {
-	IP string
+	IP     string
 	Serial int
 }
 
 // Reader is capable of connecting to an Omnik converter and reading it's status.
 type Reader struct {
-	Inverter InverterInfo
+	Inverter     InverterInfo
 	ReadInterval time.Duration
 }
 

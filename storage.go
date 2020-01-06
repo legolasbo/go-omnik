@@ -38,6 +38,7 @@ func (s *SQL) initialize() {
 	s.db = conn
 	s.prepareTables()
 	s.initializeInsertStatement()
+	s.initialized = true
 }
 
 func (s *SQL) initializeInsertStatement() {

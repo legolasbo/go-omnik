@@ -236,33 +236,7 @@ func (s *SQL) GetSamplesForDate(d time.Time) ([]Sample, error) {
 		data = append(data, sample)
 	}
 
-	return trimSamples(data), nil
-}
-
-func trimSamples(data []Sample) []Sample {
-	var fr, lr int
-
-	for k, v := range data {
-		if v.EnergyToday > 0 {
-			fr = k
-			break
-		}
-	}
-
-	for i := len(data) - 1; i > 0; i-- {
-		d := data[i]
-		if d.EnergyToday > 0 {
-			lr = i
-			break
-		}
-	}
-
-	if lr < fr {
-		fr = lr
-	}
-
-	r := data[fr : lr+1]
-	return r
+	return data, nil
 }
 
 // GetAdjecentDate retrieves the date adjecent to the given time.

@@ -39,6 +39,16 @@ func (s *SQL) initialize() {
 	s.prepareTables()
 	s.initializeInsertStatement()
 	s.initialized = true
+
+	go s.keepAlive()	
+}
+
+func (s *SQL) keepAlive() {
+	ticks := time.NewTicker(time.Second * 30)
+	for {
+		s.db.Ping()
+		<-ticks.C
+	}
 }
 
 func (s *SQL) initializeInsertStatement() {
@@ -78,7 +88,6 @@ func (s *SQL) ensureInitialized() {
 	if !s.initialized {
 		s.initialize()
 	}
-	s.db.Ping()
 }
 
 // Insert inserts a sample into the SQL database.

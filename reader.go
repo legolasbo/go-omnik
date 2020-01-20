@@ -32,7 +32,10 @@ func (r *Reader) Read() (Sample, error) {
 	// send to socket
 	fmt.Fprintf(conn, command)
 	// listen for reply
-	message, _ := bufio.NewReader(conn).ReadString('\n')
+	message, err := bufio.NewReader(conn).ReadString('\n')
+	if err != nil {
+		return Sample{}, err
+	}
 
 	msg := InverterMsg{
 		Data: []byte(message),
@@ -50,10 +53,11 @@ func (r *Reader) ReadContinuous(sChan chan Sample, eChan chan error) {
 		s, e := r.Read()
 		if e != nil {
 			eChan <- e
+			<-ticker.C
+			continue
 		}
-		if e == nil {
-			sChan <- s
-		}
+
+		sChan <- s
 		<-ticker.C
 	}
 }

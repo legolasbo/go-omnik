@@ -93,7 +93,10 @@ func (s *SQL) ensureInitialized() {
 // Insert inserts a sample into the SQL database.
 func (s *SQL) Insert(sample Sample) {
 	s.ensureInitialized()
-	s.insertStatement.Exec(sample.Timestamp, sample.Date, sample.Time, sample.Temperature, sample.EnergyTotal, sample.EnergyToday, sample.EnergyHours, sample.Power, sample.PvVoltage1, sample.PvVoltage2, sample.PvVoltage3, sample.PvCurrent1, sample.PvCurrent2, sample.PvCurrent3, sample.ACVoltage1, sample.ACVoltage2, sample.ACVoltage3, sample.ACCurrent1, sample.ACCurrent2, sample.ACCurrent3, sample.ACFrequency1, sample.ACFrequency2, sample.ACFrequency3, sample.ACPower1, sample.ACPower2, sample.ACPower3)
+	_, err := s.insertStatement.Exec(sample.Timestamp, sample.Date, sample.Time, sample.Temperature, sample.EnergyTotal, sample.EnergyToday, sample.EnergyHours, sample.Power, sample.PvVoltage1, sample.PvVoltage2, sample.PvVoltage3, sample.PvCurrent1, sample.PvCurrent2, sample.PvCurrent3, sample.ACVoltage1, sample.ACVoltage2, sample.ACVoltage3, sample.ACCurrent1, sample.ACCurrent2, sample.ACCurrent3, sample.ACFrequency1, sample.ACFrequency2, sample.ACFrequency3, sample.ACPower1, sample.ACPower2, sample.ACPower3)
+	if err != nil {
+		fmt.Println("Insert error:", err)
+	}
 }
 
 func (s *SQL) prepareTables() {

@@ -13,8 +13,10 @@ type Storage interface {
 	Insert(sample Sample)
 	// HasMonth determines if data for a given month exists.
 	HasMonth(m time.Time) bool
+	// GetSamplesInRange retrieves all samples in the specified range.
+	GetSamplesInRange(start time.Time, end time.Time) ([]Sample, error)
 	// GetDailyKWHInRange retrieves the daily KWH values in the specified range.
-	GetDailyKWHInRange(start time.Time, end time.Time)
+	GetDailyKWHInRange(start time.Time, end time.Time) ([]TimeKWH, error)
 	// GetLatestSample retrieves the last sample stored.
 	GetLatestSample() (Sample, error)
 	// GetSamplesForDate retrieves all samples on a given date.
@@ -183,6 +185,31 @@ type TimeKWH struct {
 	KWH  float32
 }
 
+// GetSamplesInRange retrieves all samples in the specified range.
+func (s *SQL) GetSamplesInRange(start time.Time, end time.Time) ([]Sample, error) {
+	s.ensureInitialized()
+	q := "SELECT * FROM samples WHERE date >= ? AND date <= ? ORDER BY date ASC;"
+	
+	r, err := s.db.Query(q, start.Format("2006-01-02"), end.Format("2006-01-02"))
+	return s.queryResultToSampleArr(r, err)
+}
+
+func (s *SQL) queryResultToSampleArr(r *sql.Rows, err error) ([]Sample, error) {
+	var data []Sample
+	if err != nil {
+		return data, err
+	}
+
+	for r.Next() {
+		var id int
+		sample := Sample{}
+		r.Scan(&id, &sample.Timestamp, &sample.Date, &sample.Time, &sample.Temperature, &sample.EnergyTotal, &sample.EnergyToday, &sample.EnergyHours, &sample.Power, &sample.PvVoltage1, &sample.PvVoltage2, &sample.PvVoltage3, &sample.PvCurrent1, &sample.PvCurrent2, &sample.PvCurrent3, &sample.ACVoltage1, &sample.ACVoltage2, &sample.ACVoltage3, &sample.ACCurrent1, &sample.ACCurrent2, &sample.ACCurrent3, &sample.ACFrequency1, &sample.ACFrequency2, &sample.ACFrequency3, &sample.ACPower1, &sample.ACPower2, &sample.ACPower3)
+		data = append(data, sample)
+	}
+
+	return data, nil
+}
+
 // GetDailyKWHInRange retrieves the daily KWH values in the specified range.
 func (s *SQL) GetDailyKWHInRange(start time.Time, end time.Time) ([]TimeKWH, error) {
 	s.ensureInitialized()
@@ -235,20 +262,9 @@ func (s *SQL) GetLatestSample() (Sample, error) {
 // GetSamplesForDate retrieves all samples on a given date.
 func (s *SQL) GetSamplesForDate(d time.Time) ([]Sample, error) {
 	s.ensureInitialized()
-	var data []Sample
-	r, err := s.db.Query("SELECT * FROM samples WHERE date =? ORDER BY time_of_measurement ASC", d.Format("2006-01-02"))
-	if err != nil {
-		return data, err
-	}
-
-	for r.Next() {
-		var id int
-		sample := Sample{}
-		r.Scan(&id, &sample.Timestamp, &sample.Date, &sample.Time, &sample.Temperature, &sample.EnergyTotal, &sample.EnergyToday, &sample.EnergyHours, &sample.Power, &sample.PvVoltage1, &sample.PvVoltage2, &sample.PvVoltage3, &sample.PvCurrent1, &sample.PvCurrent2, &sample.PvCurrent3, &sample.ACVoltage1, &sample.ACVoltage2, &sample.ACVoltage3, &sample.ACCurrent1, &sample.ACCurrent2, &sample.ACCurrent3, &sample.ACFrequency1, &sample.ACFrequency2, &sample.ACFrequency3, &sample.ACPower1, &sample.ACPower2, &sample.ACPower3)
-		data = append(data, sample)
-	}
-
-	return data, nil
+	q := "SELECT * FROM samples WHERE date =? ORDER BY time_of_measurement ASC"
+	r, err := s.db.Query(q, d.Format("2006-01-02"))
+	return s.queryResultToSampleArr(r, err)
 }
 
 // GetAdjecentDate retrieves the date adjecent to the given time.
